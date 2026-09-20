@@ -1,5 +1,5 @@
 from time import time
-from minigym.environment import SafetyPointGoal0
+from minigym.task.safety_point_goal import SafetyPointGoal0
 from tqdm import tqdm
 
 

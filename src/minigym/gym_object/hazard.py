@@ -1,7 +1,7 @@
 from pygame import Surface, Vector2
 import pygame
 
-from minigym.geometry import Rectangle, Circle
+from minigym.physics.geometry import Rectangle, Circle
 
 
 class Hazard:

@@ -1,4 +1,4 @@
-from minigym.kinetic_pointmass import KineticPointmass
+from minigym.physics.kinetic_pointmass import KineticPointmass
 from pygame import Vector2
 
 class PhysicsEngine:

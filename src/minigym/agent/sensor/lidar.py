@@ -1,7 +1,7 @@
 from math import cos, sin
 
 from pygame import Vector2
-from minigym.geometry import LineSegment
+from minigym.physics.geometry import LineSegment
 
 
 class LidarBeam:

@@ -2,9 +2,9 @@ import pygame
 from pygame import Surface, Vector2
 from math import pi
 
-from minigym.kinetic_pointmass import KineticPointmass
-from minigym.geometry import Circle, Geometry
-from minigym.lidar import LidarBeam
+from minigym.physics.kinetic_pointmass import KineticPointmass
+from minigym.physics.geometry import Circle, Geometry
+from minigym.agent.sensor.lidar import LidarBeam
 from minigym.util import clamp, angle_to_vec2
 
 
@@ -40,7 +40,7 @@ class PointRobot:
     angular_vel: float = 0
 
     def __init__(self, pos: Vector2, env):
-        from minigym.environment import Environment
+        from minigym.task.environment import Environment
 
         self.env: Environment = env
 
