@@ -18,13 +18,12 @@ class SafetyPointGoal0(Environment):
 
     def cost(self):
         # For quantitative instead of qualitative cost, use Geometry.intersection_point
-        collision = any(
-            [Geometry.intersects_with(self.robot.geom, h.geom) for h in self.hazards]
-        )
-        if collision:
+        collisions = [Geometry.intersects_with(self.robot.geom, h.geom) for h in self.hazards]
+        if any(collisions):
+            ind = collisions.index(True)
             cost = 1 - (
-                (self.robot.pos - self.hazards[0].pos).length()
-                / (self.hazards[0].geom.radius + self.robot.RADIUS)
+                (self.robot.pos - self.hazards[ind].pos).length()
+                / (self.hazards[ind].geom.radius + self.robot.RADIUS)
             )
             return cost
         else:

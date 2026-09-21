@@ -64,14 +64,7 @@ while running:
     env.step(DELTAT)
 
     # Draw
-    screen.fill((180, 180, 180))
-
-    S = 100
-    for i in range(4):
-        for j in range(6):
-            pygame.draw.rect(
-                screen, (220, 220, 220), pygame.Rect((i * 2 + (j % 2)) * S, j*S, S, S)
-            )
+    screen.fill((255, 0, 255))
 
     env.draw(screen)
 
