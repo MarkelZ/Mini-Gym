@@ -7,7 +7,7 @@ from minigym.physics.geometry import Circle
 class Goal:
     geom: Circle
     color: list[int] = [0, 255, 0]
-    RADIUS = 40
+    RADIUS = 80
 
     def __init__(self, pos: Vector2):
         self.geom = Circle(pos, self.RADIUS)

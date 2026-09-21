@@ -2,6 +2,15 @@
 
 A minimalist safety gym clone.
 
+## Install and run
+
+Install with
+```
+pip3 install -e .
+```
+
+Run script files in `Mini-Gym/scripts/`.
+
 ## Physics
 
 Custom minimal engine with Euler integration.

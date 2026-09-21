@@ -10,12 +10,12 @@ from minigym.util import clamp, angle_to_vec2
 
 class PointRobot:
     # Controls
-    THROTTLE_MUL = 800
-    STEER_MUL = 10
+    THROTTLE_MUL = 5000
+    STEER_MUL = 50
 
     # Physics settings
-    _LINEAR_FRICTION: float = 0.95
-    _ANGULAR_FRICTION: float = 0.95
+    _LINEAR_FRICTION: float = 0.8
+    _ANGULAR_FRICTION: float = 0.8
 
     # Geometry
     geom: Circle

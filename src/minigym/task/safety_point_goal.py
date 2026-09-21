@@ -2,13 +2,16 @@ from minigym.task.environment import Environment
 from minigym.physics.geometry import Geometry
 from pygame import Vector2
 from minigym.gym_object.hazard import Hazard
+from minigym.util import clamp
+
 
 class SafetyPointGoal0(Environment):
     def __init__(self):
         super().__init__()
         self.robot.pos = Vector2(80, 80)
-        self.hazards.append(Hazard(Vector2(250, 200)))
-        self.goal.pos = Vector2(400, 500)
+        self.hazards.append(Hazard(Vector2(150, 300)))
+        self.goal.pos = Vector2(400, 300)
+        self.prevdist = self.goal_dist()
 
     def act(self, args: list[float]):
         self.robot.act(args[0], args[1])
@@ -19,13 +22,23 @@ class SafetyPointGoal0(Environment):
             [Geometry.intersects_with(self.robot.geom, h.geom) for h in self.hazards]
         )
         if collision:
-            return 1
+            cost = 1 - (
+                (self.robot.pos - self.hazards[0].pos).length()
+                / (self.hazards[0].geom.radius + self.robot.RADIUS)
+            )
+            return cost
         else:
             return 0
+
+    def goal_dist(self):
+        return (self.robot.pos - self.goal.pos).length()
 
     def reward(self):
         win = Geometry.intersects_with(self.robot.geom, self.goal.geom)
         if win:
             return 1
         else:
-            return 0
+            d = self.goal_dist()
+            rew = clamp((self.prevdist - d), -10, 10) * 0.1
+            self.prevdist = d
+            return rew

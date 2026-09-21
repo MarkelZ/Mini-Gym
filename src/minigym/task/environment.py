@@ -15,24 +15,24 @@ class Environment(ABC):
         self.goal = Goal(Vector2())
         self.robot = PointRobot(Vector2(), self)
 
-    def obs(self):
+    def obs(self) -> list[float]:
         return self.robot.obs()
 
-    def cost(self):
+    def cost(self) -> float:
         return 0
 
-    def reward(self):
+    def reward(self) -> float:
         return 0
 
     @abstractmethod
-    def act(self, args: list[float]):
+    def act(self, args: list[float]) -> None:
         pass
 
-    def step(self, deltat: float):
+    def step(self, deltat: float) -> None:
         self.physics.update(deltat)
         self.robot.update(deltat)
 
-    def draw(self, surface: Surface):
+    def draw(self, surface: Surface) -> None:
         for h in self.hazards:
             h.draw(surface)
         self.goal.draw(surface)
