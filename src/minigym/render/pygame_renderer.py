@@ -47,11 +47,12 @@ class PygameRenderer:
 
         # LIDARS, kinda hacky
         for i in range(robot.NUM_HAZARD_LIDARS):
-            l = robot.hazard_lidars[i]
+            l = robot.hazard_lidar._beams[i]
             o_h = robot.obs()[i]
             o_g = robot.obs()[i + robot.NUM_GOAL_LIDARS]
             color = (0, 255 * o_g, 255 * o_h)
             pygame.draw.circle(surface, color, l.pos + angle_to_vec2(l._angle, 10), 5)
+            # pygame.draw.line(surface, (255, 0, 255), l.geom.start, l.geom.end)
 
     def render(self, surface: pygame.Surface) -> None:
         # Background

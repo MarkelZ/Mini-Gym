@@ -3,7 +3,7 @@ from math import pi
 
 from minigym.physics.kinetic_pointmass import KineticPointmass
 from minigym.physics.geometry import Circle, Geometry
-from minigym.agent.sensor.lidar import LidarBeam
+from minigym.agent.sensor.lidar import LidarBatch, LidarBeam
 from minigym.util import clamp, angle_to_vec2
 
 
@@ -33,6 +33,9 @@ class PointRobot:
     angular_acc: float = 0
     angular_vel: float = 0
 
+    hazard_lidar: LidarBatch
+    goal_lidar: LidarBatch
+
     def __init__(self, pos: Vector2, env):
         from minigym.task.environment import Environment
 
@@ -43,26 +46,10 @@ class PointRobot:
         self.env.physics.add_pointmass(self.pointmass)
         self.geom = Circle(pos, self.RADIUS)
 
-        self.hazard_lidars: list[LidarBeam] = [
-            LidarBeam(Vector2(), 0) for _ in range(self.NUM_HAZARD_LIDARS)
-        ]
-        self.goal_lidars: list[LidarBeam] = [
-            LidarBeam(Vector2(), 0) for _ in range(self.NUM_HAZARD_LIDARS)
-        ]
-        self._update_lidar_pos()
-
-    def _update_lidar_pos(self):
-        theta = (2 * pi) / (self.NUM_HAZARD_LIDARS)
-        for i in range(self.NUM_HAZARD_LIDARS):
-            angle = self.angle + i * theta
-            pos = self.pos + angle_to_vec2(angle, self.RADIUS)
-            self.hazard_lidars[i].update_geom_params(pos=pos, angle=angle)
-
-        theta = (2 * pi) / (self.NUM_GOAL_LIDARS)
-        for i in range(self.NUM_GOAL_LIDARS):
-            angle = self.angle + i * theta
-            pos = self.pos + angle_to_vec2(angle, self.RADIUS)
-            self.goal_lidars[i].update_geom_params(pos=pos, angle=angle)
+        self.hazard_lidar = LidarBatch(self.NUM_HAZARD_LIDARS, self.LIDAR_LENGTH)
+        self.goal_lidar = LidarBatch(self.NUM_GOAL_LIDARS, self.LIDAR_LENGTH)
+        self.hazard_lidar.update_orientation(self.pos, self.angle, self.RADIUS)
+        self.goal_lidar.update_orientation(self.pos, self.angle, self.RADIUS)
 
     @property
     def pos(self):
@@ -89,42 +76,9 @@ class PointRobot:
         )
 
     def obs(self) -> list[bool]:
-        hazard_intersects = [
-            Geometry.intersection_point(
-                self.hazard_lidars[i].geom, self.env.hazards[0].geom
-            )
-            for i in range(self.NUM_HAZARD_LIDARS)
-        ]
-        hazard_lidar_dist = [
-            (
-                1
-                - (hazard_intersects[i] - self.hazard_lidars[i].pos).length()
-                / self.hazard_lidars[i]._length
-                if hazard_intersects[i] is not None
-                else 0.0
-            )
-            for i in range(self.NUM_HAZARD_LIDARS)
-        ]
-        goal_intersects = [
-            Geometry.intersection_point(self.goal_lidars[i].geom, self.env.goal.geom)
-            for i in range(self.NUM_GOAL_LIDARS)
-        ]
-        goal_lidar_dist = [
-            (
-                1
-                - (goal_intersects[i] - self.goal_lidars[i].pos).length()
-                / self.goal_lidars[i]._length
-                if goal_intersects[i] is not None
-                else 0.0
-            )
-            for i in range(self.NUM_GOAL_LIDARS)
-        ]
-        return (
-            hazard_lidar_dist
-            + goal_lidar_dist
-            # + [self.angle]
-            # + [self.vel.x, self.vel.y]
-        )
+        goal_obs: list[float] = self.goal_lidar.obs(self.env.goal.geom)
+        hazard_obs: list[float] = self.hazard_lidar.obs(self.env.hazards[0].geom)
+        return hazard_obs + goal_obs
 
     def update(self, deltat: float):
         # Update angle with steer physics
@@ -138,5 +92,5 @@ class PointRobot:
         self.geom.center = self.pointmass.pos
 
         # Move LIDARs to physical location
-        self._update_lidar_pos()
-
+        self.hazard_lidar.update_orientation(self.pos, self.angle, self.RADIUS)
+        self.goal_lidar.update_orientation(self.pos, self.angle, self.RADIUS)
