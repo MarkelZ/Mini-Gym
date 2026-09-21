@@ -33,19 +33,3 @@ class Environment(ABC):
         self.physics.update(deltat)
         self.robot.update(deltat)
 
-    def draw(self, surface: Surface) -> None:
-        surface.fill((180, 180, 180))
-        S = 100
-        for i in range(4):
-            for j in range(6):
-                pygame.draw.rect(
-                    surface,
-                    (220, 220, 220),
-                    pygame.Rect((i * 2 + (j % 2)) * S, j * S, S, S),
-                )
-
-        for h in self.hazards:
-            h.draw(surface)
-
-        self.goal.draw(surface)
-        self.robot.draw(surface)

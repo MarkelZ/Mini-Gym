@@ -1,12 +1,10 @@
-from pygame import Surface, Vector2
-import pygame
+from pygame import Vector2
 
 from minigym.physics.geometry import Circle
 
 
 class Goal:
     geom: Circle
-    color: list[int] = [0, 255, 0]
     RADIUS = 80
 
     def __init__(self, pos: Vector2):
@@ -19,6 +17,3 @@ class Goal:
     @pos.setter
     def pos(self, value: Vector2):
         self.geom.center = value
-
-    def draw(self, surface: Surface):
-        pygame.draw.circle(surface, self.color, self.geom.center, self.geom.radius)

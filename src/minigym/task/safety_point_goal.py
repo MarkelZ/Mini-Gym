@@ -9,7 +9,7 @@ class SafetyPointGoal0(Environment):
     def __init__(self):
         super().__init__()
         self.robot.pos = Vector2(80, 80)
-        self.hazards.append(Hazard(Vector2(150, 300)))
+        self.hazards.append(Hazard(Vector2(150, 400)))
         self.goal.pos = Vector2(400, 300)
         self.prevdist = self.goal_dist()
 
@@ -35,9 +35,10 @@ class SafetyPointGoal0(Environment):
     def reward(self):
         win = Geometry.intersects_with(self.robot.geom, self.goal.geom)
         if win:
-            return 1
+            rew = 1
         else:
             d = self.goal_dist()
             rew = clamp((self.prevdist - d), -10, 10) * 0.1
             self.prevdist = d
-            return rew
+        
+        return rew

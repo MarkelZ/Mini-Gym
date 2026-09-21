@@ -15,12 +15,12 @@ from minigym.algorithm.policy import ActorCritic
 
 @dataclass
 class PPOLagConfig:
-    env_fn: Callable                     # () -> Environment instance (fresh episode)
+    env_fn: Callable  # () -> Environment instance (fresh episode)
     act_dim: int
     action_low: List[float]
     action_high: List[float]
-    deltat: float = 1.0 / 60.0           # physics timestep used for env.step()
-    max_ep_len: int = 1000               # k: steps before the env object is discarded/reset
+    deltat: float = 1.0 / 60.0  # physics timestep used for env.step()
+    max_ep_len: int = 1000  # k: steps before the env object is discarded/reset
     steps_per_epoch: int = 4000
     epochs: int = 50
     gamma: float = 0.99
@@ -30,12 +30,12 @@ class PPOLagConfig:
     vf_lr: float = 1e-3
     train_pi_iters: int = 80
     train_v_iters: int = 80
-    cost_limit: float = 25.0             # target average cost per episode
-    lambda_lr: float = 0.05              # step size for the Lagrange multiplier
-    hidden_sizes: tuple = (16,)
+    cost_limit: float = 25.0  # target average cost per episode
+    lambda_lr: float = 0.05  # step size for the Lagrange multiplier
+    hidden_sizes: tuple = (64, 64)
     seed: int = 0
     save_dir: str = "checkpoints"
-    save_every: int = 10                 # epochs between checkpoints
+    save_every: int = 10  # epochs between checkpoints
     log_path: str = "logs/train_log.csv"
 
 
@@ -62,8 +62,17 @@ def train(cfg: PPOLagConfig):
     buf = PPOLagBuffer(obs_dim, cfg.act_dim, cfg.steps_per_epoch, cfg.gamma, cfg.lam)
     logger = CSVLogger(
         cfg.log_path,
-        fieldnames=["epoch", "total_steps", "avg_reward", "avg_cost", "avg_ep_len",
-                    "lagrange_lambda", "pi_loss", "v_loss", "cv_loss"],
+        fieldnames=[
+            "epoch",
+            "total_steps",
+            "avg_reward",
+            "avg_cost",
+            "avg_ep_len",
+            "lagrange_lambda",
+            "pi_loss",
+            "v_loss",
+            "cv_loss",
+        ],
     )
     os.makedirs(cfg.save_dir, exist_ok=True)
 
@@ -115,14 +124,21 @@ def train(cfg: PPOLagConfig):
         avg_cost = float(np.mean(ep_costs)) if ep_costs else 0.0
         avg_reward = float(np.mean(ep_returns)) if ep_returns else 0.0
         avg_ep_len = float(np.mean(ep_lens)) if ep_lens else 0.0
-        lagrange_lambda = max(0.0, lagrange_lambda + cfg.lambda_lr * (avg_cost - cfg.cost_limit))
+        lagrange_lambda = max(
+            0.0, lagrange_lambda + cfg.lambda_lr * (avg_cost - cfg.cost_limit)
+        )
         ep_returns, ep_costs, ep_lens = [], [], []
 
         # ----- PPO update -----
         data = buf.get()
         obs, act, ret, cret, adv, cadv, logp_old = (
-            data["obs"], data["act"], data["ret"], data["cret"],
-            data["adv"], data["cadv"], data["logp"],
+            data["obs"],
+            data["act"],
+            data["ret"],
+            data["cret"],
+            data["adv"],
+            data["cadv"],
+            data["logp"],
         )
         # Combine reward advantage with the (Lagrange-weighted) cost advantage, then
         # renormalize so the multiplier's scale doesn't distort the PPO clip ratio.
@@ -134,7 +150,9 @@ def train(cfg: PPOLagConfig):
             pi_optimizer.zero_grad()
             _, logp = ac.pi(obs, act)
             ratio = torch.exp(logp - logp_old)
-            clip_adv = torch.clamp(ratio, 1 - cfg.clip_ratio, 1 + cfg.clip_ratio) * adv_total
+            clip_adv = (
+                torch.clamp(ratio, 1 - cfg.clip_ratio, 1 + cfg.clip_ratio) * adv_total
+            )
             loss_pi = -torch.min(ratio * adv_total, clip_adv).mean()
             loss_pi.backward()
             pi_optimizer.step()
@@ -150,12 +168,20 @@ def train(cfg: PPOLagConfig):
             v_loss_val, cv_loss_val = loss_v.item(), loss_cv.item()
 
         logger.log(
-            epoch=epoch, total_steps=total_steps, avg_reward=avg_reward, avg_cost=avg_cost,
-            avg_ep_len=avg_ep_len, lagrange_lambda=lagrange_lambda, pi_loss=pi_loss_val,
-            v_loss=v_loss_val, cv_loss=cv_loss_val,
+            epoch=epoch,
+            total_steps=total_steps,
+            avg_reward=avg_reward,
+            avg_cost=avg_cost,
+            avg_ep_len=avg_ep_len,
+            lagrange_lambda=lagrange_lambda,
+            pi_loss=pi_loss_val,
+            v_loss=v_loss_val,
+            cv_loss=cv_loss_val,
         )
-        print(f"epoch {epoch:4d} | steps {total_steps:8d} | reward {avg_reward:8.3f} | "
-              f"cost {avg_cost:8.3f} | lambda {lagrange_lambda:6.3f}")
+        print(
+            f"epoch {epoch:4d} | steps {total_steps:8d} | reward {avg_reward:8.3f} | "
+            f"cost {avg_cost:8.3f} | lambda {lagrange_lambda:6.3f}"
+        )
 
         if (epoch + 1) % cfg.save_every == 0 or epoch == cfg.epochs - 1:
             save_checkpoint(ac, lagrange_lambda, obs_dim, cfg, epoch + 1)
@@ -164,7 +190,9 @@ def train(cfg: PPOLagConfig):
     return ac
 
 
-def save_checkpoint(ac: ActorCritic, lagrange_lambda: float, obs_dim: int, cfg: PPOLagConfig, epoch: int):
+def save_checkpoint(
+    ac: ActorCritic, lagrange_lambda: float, obs_dim: int, cfg: PPOLagConfig, epoch: int
+):
     path = os.path.join(cfg.save_dir, f"epoch_{epoch}.pt")
     torch.save(
         {

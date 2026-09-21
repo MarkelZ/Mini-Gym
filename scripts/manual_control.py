@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+from minigym.render.pygame_renderer import PygameRenderer
 from minigym.task.safety_point_goal import SafetyPointGoal0
 
 # Initialize Pygame
@@ -16,6 +17,7 @@ clock = pygame.time.Clock()
 FPS = 60
 
 env = SafetyPointGoal0()
+renderer = PygameRenderer(env)
 
 # Main game loop
 running = True
@@ -47,7 +49,7 @@ while running:
     # Draw
     screen.fill((255, 0, 255))
 
-    env.draw(screen)
+    renderer.render(screen)
 
     # Update the display
     pygame.display.flip()

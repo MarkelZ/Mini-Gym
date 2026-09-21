@@ -1,5 +1,4 @@
-import pygame
-from pygame import Surface, Vector2
+from pygame import Vector2
 from math import pi
 
 from minigym.physics.kinetic_pointmass import KineticPointmass
@@ -25,11 +24,6 @@ class PointRobot:
     NUM_HAZARD_LIDARS = 8
     NUM_GOAL_LIDARS = 8
     LIDAR_LENGTH = 400
-
-    # Appearance
-    color1: list[int] = [255, 0, 0]
-    color2: list[int] = [0, 0, 255]
-    DIR_WIDTH = 5
 
     # Physics
     pointmass: KineticPointmass
@@ -61,20 +55,14 @@ class PointRobot:
         theta = (2 * pi) / (self.NUM_HAZARD_LIDARS)
         for i in range(self.NUM_HAZARD_LIDARS):
             angle = self.angle + i * theta
-            l = self.hazard_lidars[i]
-            l.angle = angle
-            l.pos = self.pos + angle_to_vec2(angle, self.RADIUS)
-            l.update_geom()
-            l.length = self.LIDAR_LENGTH
+            pos = self.pos + angle_to_vec2(angle, self.RADIUS)
+            self.hazard_lidars[i].update_geom_params(pos=pos, angle=angle)
 
         theta = (2 * pi) / (self.NUM_GOAL_LIDARS)
         for i in range(self.NUM_GOAL_LIDARS):
             angle = self.angle + i * theta
-            l = self.goal_lidars[i]
-            l.angle = angle
-            l.pos = self.pos + angle_to_vec2(angle, self.RADIUS)
-            l.update_geom()
-            l.length = self.LIDAR_LENGTH
+            pos = self.pos + angle_to_vec2(angle, self.RADIUS)
+            self.goal_lidars[i].update_geom_params(pos=pos, angle=angle)
 
     @property
     def pos(self):
@@ -107,11 +95,11 @@ class PointRobot:
             )
             for i in range(self.NUM_HAZARD_LIDARS)
         ]
-        hazard_dist = [
+        hazard_lidar_dist = [
             (
                 1
                 - (hazard_intersects[i] - self.hazard_lidars[i].pos).length()
-                / self.hazard_lidars[i].length
+                / self.hazard_lidars[i]._length
                 if hazard_intersects[i] is not None
                 else 0.0
             )
@@ -121,17 +109,22 @@ class PointRobot:
             Geometry.intersection_point(self.goal_lidars[i].geom, self.env.goal.geom)
             for i in range(self.NUM_GOAL_LIDARS)
         ]
-        goal_dist = [
+        goal_lidar_dist = [
             (
                 1
                 - (goal_intersects[i] - self.goal_lidars[i].pos).length()
-                / self.goal_lidars[i].length
+                / self.goal_lidars[i]._length
                 if goal_intersects[i] is not None
                 else 0.0
             )
             for i in range(self.NUM_GOAL_LIDARS)
         ]
-        return hazard_dist + goal_dist
+        return (
+            hazard_lidar_dist
+            + goal_lidar_dist
+            # + [self.angle]
+            # + [self.vel.x, self.vel.y]
+        )
 
     def update(self, deltat: float):
         # Update angle with steer physics
@@ -147,27 +140,3 @@ class PointRobot:
         # Move LIDARs to physical location
         self._update_lidar_pos()
 
-    def draw(self, surface: Surface):
-        # Visualize cost and reward
-        if self.env.cost() > 0:
-            pygame.draw.circle(surface, (128, 0, 0), self.pos, self.geom.radius * 2)
-        elif self.env.reward() > 0:
-            pygame.draw.circle(surface, (0, 128, 0), self.pos, self.geom.radius * 2)
-
-        # Draw pos and angle
-        pygame.draw.circle(surface, self.color1, self.pos, self.geom.radius)
-        pygame.draw.line(
-            surface,
-            self.color2,
-            self.pos,
-            self.pos + angle_to_vec2(self.angle, self.RADIUS + 5),
-            self.DIR_WIDTH,
-        )
-
-        # LIDARS
-        for i in range(self.NUM_HAZARD_LIDARS):
-            l = self.hazard_lidars[i]
-            o_h = self.obs()[i]
-            o_g = self.obs()[i + self.NUM_GOAL_LIDARS]
-            color = (0, 255 * o_g, 255 * o_h)
-            pygame.draw.circle(surface, color, l.pos + angle_to_vec2(l.angle, 10), 5)
