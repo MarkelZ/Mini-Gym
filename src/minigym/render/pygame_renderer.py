@@ -32,7 +32,7 @@ class PygameRenderer:
         # Visualize cost and reward
         if self.env.cost() > 0:
             pygame.draw.circle(surface, (128, 0, 0), robot.pos, robot.geom.radius * 2)
-        elif self.env.reward() > 0:
+        elif self.env.reward() >= 1.0 - 1e-5:
             pygame.draw.circle(surface, (0, 128, 0), robot.pos, robot.geom.radius * 2)
 
         # Draw pos and angle
