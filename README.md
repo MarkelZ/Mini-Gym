@@ -13,7 +13,7 @@ Run script files in `Mini-Gym/scripts/`.
 
 ## Physics
 
-Custom minimal engine with Euler integration.
+Custom minimal engine with Verlet integration.
 
 ## License
 

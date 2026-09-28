@@ -3,7 +3,7 @@ from pygame import Vector2
 
 class KineticPointmass:
     _pos: Vector2
-    _vel: Vector2
+    _prev_pos: Vector2
     _acc: Vector2
     friction: float = 0.98
     mass: float = 1
@@ -12,7 +12,7 @@ class KineticPointmass:
 
     def __init__(self, pos: Vector2, vel: Vector2 = None):
         self._pos = pos
-        self._vel = Vector2(0, 0) if vel is None else vel
+        self._prev_pos = pos - (Vector2(0, 0) if vel is None else vel)
         self._acc = Vector2(0, 0)
 
     @property
@@ -21,15 +21,16 @@ class KineticPointmass:
 
     @pos.setter
     def pos(self, value: Vector2):
+        self._prev_pos += value - self._pos
         self._pos = value
 
     @property
     def vel(self):
-        return self._vel
+        return self._pos - self._prev_pos
 
-    @pos.setter
+    @vel.setter
     def vel(self, value: Vector2):
-        self._vel = value
+        self._prev_pos = self._pos - value
 
     def apply_force(self, force: Vector2):
         self._acc += force / self.mass
