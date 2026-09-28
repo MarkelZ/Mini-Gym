@@ -36,10 +36,8 @@ class PointRobot:
     hazard_lidar: LidarBatch
     goal_lidar: LidarBatch
 
-    def __init__(self, pos: Vector2, env):
-        from minigym.task.environment import Environment
-
-        self.env: Environment = env
+    def __init__(self, env, pos: Vector2):
+        super.__init__(env)
 
         self.pointmass = KineticPointmass(pos)
         self.pointmass.friction = self._LINEAR_FRICTION
@@ -75,7 +73,7 @@ class PointRobot:
             throttle * self.THROTTLE_MUL, angle_to_vec2(self.angle)
         )
 
-    def obs(self) -> list[bool]:
+    def obs(self) -> list[float]:
         goal_obs: list[float] = self.goal_lidar.obs(self.env.goal.geom)
         hazard_obs: list[float] = self.hazard_lidar.obs(self.env.hazards[0].geom)
         return hazard_obs + goal_obs

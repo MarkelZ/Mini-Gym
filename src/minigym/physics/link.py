@@ -12,8 +12,7 @@ class Link:
         dist = delta.length()
         if dist == 0:
             return
-        correction = delta * (1 - self.length / dist) * 0.5
-        self.a.pos += correction
-        self.b.pos -= correction
-
-
+        total_mass = self.a.mass + self.b.mass
+        correction = delta * (1 - self.length / dist)
+        self.a.pos += correction * (self.b.mass / total_mass)
+        self.b.pos -= correction * (self.a.mass / total_mass)

@@ -1,3 +1,5 @@
+from minigym.agent.point_robot import PointRobot
+from minigym.gym_object.goal import Goal
 from minigym.task.environment import Environment
 from minigym.physics.geometry import Geometry
 from pygame import Vector2
@@ -8,9 +10,12 @@ from minigym.util import clamp
 class SafetyPointGoal0(Environment):
     def __init__(self):
         super().__init__()
-        self.robot.pos = Vector2(80, 80)
+
+        self.robot = PointRobot(self, Vector2(80, 80))
+        self.hazards: list[Hazard] = []
+        self.goal = Goal(Vector2(400, 300))
         self.hazards.append(Hazard(Vector2(150, 400)))
-        self.goal.pos = Vector2(400, 300)
+
         self.prevdist = self.goal_dist()
 
     def act(self, args: list[float]):
